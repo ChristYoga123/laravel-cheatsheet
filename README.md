@@ -54,6 +54,7 @@ class StoreUserData implements ShouldQueue
      */
     public function handle()
     {
+        // masukkan tugas yang akan dihandle secara async di method handle(). Jika ingin memberikan construct method juga dipersilahkan
         $faker = Factory::create();
         $user_ammount = 10000;
         for($i = 1; $i <= $user_ammount; $i++)
@@ -106,3 +107,11 @@ Route::get('/', function () {
 ```php artisan queue:work```
 
 5. Queue Create data berhasil diterapkan
+
+Hasilnya sekalipun website kita dipaksa input 10000 data user, website kita tidak perlu menunggu proses memasukkannya selesai tetapi job yang lama masuk ke queue dan website akan menjalankan code di bawahnya.
+
+<?php 
+
+<img src="{{asset('queue-result.png')}}" width="500px" />
+
+?>
