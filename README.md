@@ -1,12 +1,108 @@
 # About
 
-Repository ini akan berisikan seluruh proses belajar saya tentang berbagai macam fitur-fitur dari Laravel bahkan package-package yang sering dipakai di industri sehingga dapat diimplementasikan ke dunia kerja nantinya. 
+Queue di Laravel adalah fitur yang memungkinkan aplikasi untuk menunda tugas-tugas yang memerlukan waktu pemrosesan yang lama, seperti pengiriman email, pemrosesan gambar, atau tugas-tugas lainnya. Dengan menggunakan Queue, aplikasi dapat terus berjalan tanpa menunggu tugas-tugas tersebut selesai diproses, dan hasilnya dapat dikirimkan ke pengguna pada waktu yang tepat. Laravel menyediakan driver Queue yang dapat diintegrasikan dengan berbagai layanan antrian, seperti Redis, Beanstalkd, atau database SQL.
 
-Laravel-Cheatsheet akan mengandung materi seperti penggunaan library Spatie seperti Medialibrary dan Permission, Queue dan Cache, Query Builder dan masih banyak lagi fitur-fitur untuk optimalisasi performa web teman-teman
+Untuk driver yang akan digunakan adalah database
 
-# Tools
+### Steps
 
-1. Laravel 8^ / 9 better
-2. Laravel Debugbar => debugging laravel
+1. Buat table job dulu untuk menyimpan queue lalu migrate
 
-### NB: Repo ini tidak mengandung materi dasar dari Laravel seperti CRUD, API, dan materi dasar lainnya. Tiap fitur akan dimasukkan ke dalam branchnya sehingga jika ingin mengetahui file file yang berubah saat menggunakan fitur di Laravel, teman-teman bisa lihat di commit ya:V Belajar tapi ENJOY!
+```php artisan queue:table```
+```php artisan migrate```
+
+2. Buat job task
+
+```php artisan make:job <NAMAJOB>```
+
+3. Masukkan task yang akan dibuat async ke dalam job
+
+File app/Jobs/<NAMAJOB.php>
+
+```
+<?php
+
+namespace App\Jobs;
+
+use Faker\Factory;
+use App\Models\User;
+use Illuminate\Bus\Queueable;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
+
+class StoreUserData implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    /**
+     * Create a new job instance.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        //
+    }
+
+    /**
+     * Execute the job.
+     *
+     * @return void
+     */
+    public function handle()
+    {
+        $faker = Factory::create();
+        $user_ammount = 10000;
+        for($i = 1; $i <= $user_ammount; $i++)
+        {
+            $data = [
+                "name" => $faker->name(),
+                "email" => $faker->unique()->email(),
+                "password" => bcrypt("password")    
+            ];
+
+            User::create($data);
+        }
+    }
+}
+```
+
+<i>Testing create 10000 data user dengan factory faker</i>
+
+Di file routes/web.php
+
+```
+<?php
+
+use App\Jobs\StoreUserData;
+use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group. Now create something great!
+|
+*/
+
+Route::get('/', function () {
+    // Store Data Queue Logic
+    $start = microtime(true);
+    dispatch(new StoreUserData()); // memanggil job untuk dijalankan secara async
+    $end = microtime(true);
+    $durasi = $end - $start;
+    return "<h1>Halaman diproses dalam ". $durasi . ' detik</h1>';
+});
+```
+
+4. Jalankan queuenya
+
+```php artisan queue:work```
+
+5. Queue Create data berhasil diterapkan

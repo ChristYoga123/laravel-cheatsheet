@@ -1,5 +1,6 @@
 <?php
 
+use App\Jobs\StoreUserData;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,5 +15,10 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    // Store Data Queue Logic
+    $start = microtime(true);
+    dispatch(new StoreUserData());
+    $end = microtime(true);
+    $durasi = $end - $start;
+    return "<h1>Halaman diproses dalam ". $durasi . ' detik</h1>';
 });
