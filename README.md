@@ -110,8 +110,10 @@ Route::get('/', function () {
 
 Hasilnya sekalipun website kita dipaksa input 10000 data user, website kita tidak perlu menunggu proses memasukkannya selesai tetapi job yang lama masuk ke queue dan website akan menjalankan code di bawahnya.
 
+```
 <?php 
 
 <img src="{{asset('queue-result.png')}}" width="500px" />
 
 ?>
+```
